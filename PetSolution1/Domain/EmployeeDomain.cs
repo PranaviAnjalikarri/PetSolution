@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Azure.WebJobs.Hosting;
 using Newtonsoft.Json;
 using PetSolution1.CommonUtilities;
 using PetSolution1.DAL;
@@ -38,7 +37,7 @@ namespace PetSolution1.Domain
                     return new BadRequestObjectResult("Please give a valid name");
                 }
                 //Finds the age based on dateofbirth
-                newEmployee.Age = DateTime.Now.AddYears(-newEmployee.DOB.Year).Year;
+               newEmployee.Age = DateTime.Now.AddYears(-newEmployee.DOB.Year).Year;
                 //Returns badrequest if the phone number is not valid.
                 if (!(!string.IsNullOrWhiteSpace(newEmployee.PhoneNumber) && IsValidPhoneNumber(newEmployee.PhoneNumber)))
                 {
@@ -50,7 +49,8 @@ namespace PetSolution1.Domain
                     return new BadRequestObjectResult("Please give a valid email address");
                 }
                 var employeeDAL = new EmployeeDAL(_configuration);
-                return await employeeDAL.CreateEmployeeAsync(newEmployee);
+                var response = await employeeDAL.CreateEmployeeAsync(newEmployee);
+                return new OkObjectResult("{\"result\":\"Employee Added\"}");    
             }
             catch (Exception e)
             {
@@ -62,7 +62,8 @@ namespace PetSolution1.Domain
         {
             log.LogInformation("c# http trigger function processed a request.");
             EmployeeDAL employeeDAL = new EmployeeDAL(_configuration);
-            return await employeeDAL.GetAllEmployeesAsync();
+            return  await employeeDAL.GetAllEmployeesAsync();
+     
 
         }
 
@@ -70,7 +71,7 @@ namespace PetSolution1.Domain
         {
             log.LogInformation("c# http trigger function processed a request.");
             EmployeeDAL employeeDAL = new EmployeeDAL(_configuration);
-            return await employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
+            return  await employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
         }
 
         public async Task<IActionResult> UpdateEmployeeAsync(HttpRequest req, string id, ILogger log)
@@ -99,7 +100,8 @@ namespace PetSolution1.Domain
                     return new BadRequestObjectResult("Please give a valid email address");
                 }
                 var employeeDAL = new EmployeeDAL(_configuration);
-                return await employeeDAL.UpdateEmployeeAsync(newEmployee,newEmployee.Id);
+                var response = await employeeDAL.UpdateEmployeeAsync(newEmployee,newEmployee.Id);
+                return new OkObjectResult("{\"result\":\"Employee Updated\"}");
             }
             catch (Exception e)
             {
@@ -107,13 +109,14 @@ namespace PetSolution1.Domain
             }
         }
 
-        public async Task<IActionResult> DeleteEmployeeByIdAsync(string id, string partitionKey, ILogger log)
+        public async Task<IActionResult> DeleleEmployeeByIdAsync(HttpRequest req, string id, string partitionKey, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
             try
             {
                 var employeeDAL = new EmployeeDAL(_configuration);
-                return await employeeDAL.DeleleEmployeeByIdAsync(id, partitionKey);
+                await employeeDAL.DeleleEmployeeByIdAsync(id, partitionKey);
+                return new OkObjectResult("{\"result\":\"Employee Deleted\"}");
             }
 
             catch (Exception ex)
@@ -172,16 +175,6 @@ namespace PetSolution1.Domain
 
             }
             return false;
-        }
-
-        public Task<IActionResult> UpdateEmployeeAsync(HttpRequest req, Employee employee, string id, ILogger log)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IActionResult> DeleleEmployeeByIdAsync(HttpRequest req, string id, string partitionKey, ILogger log)
-        {
-            throw new NotImplementedException();
         }
     }
     

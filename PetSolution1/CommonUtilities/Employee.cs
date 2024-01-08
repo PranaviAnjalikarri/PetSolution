@@ -2,18 +2,22 @@
 using System;
 using System.Globalization;
 
+
 namespace PetSolution1.CommonUtilities
 {
     public class Employee
     {
         [JsonProperty("id")]
         public string Id { get; set; }
-
+       
         [JsonProperty("name")]
         public string Name { get; set; }
 
         [JsonProperty("age")]
         public int Age { get; set; }
+
+        [JsonProperty("gender")]
+        public string Gender { get; set; }
 
         [JsonProperty("dob")]
         [JsonConverter(typeof(DateOnlyJsonConverter))]
@@ -24,11 +28,13 @@ namespace PetSolution1.CommonUtilities
 
         [JsonProperty("email")]
         public string Email { get; set; }
+
     }
+
 
     public class DateOnlyJsonConverter : JsonConverter<DateOnly>
     {
-        private const string Format = "dd/MM/yyyy";
+        private const string Format = "yyyy-MM-dd";
 
         public override DateOnly ReadJson(JsonReader reader,
             Type objectType,

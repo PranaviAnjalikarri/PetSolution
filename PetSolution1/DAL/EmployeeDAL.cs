@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using PetSolution1.CommonUtilities;
 using PetSolution1.DAL.Interface;
 using System;
-using Microsoft.Azure.WebJobs.Hosting;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -25,7 +23,6 @@ namespace PetSolution1.DAL
             this.PrimaryConnectionString = _configuration.GetValue<string>("PrimaryConnectionString");
             this.CosmosDbName = _configuration.GetValue<string>("CosmosDbName");
             this.CosmosDbContainerName = _configuration.GetValue<string>("CosmosDbContainerName");
-
             this.cosmosDbClient= new CosmosClient(this.PrimaryConnectionString);
             this.containerClient = cosmosDbClient.GetContainer(this.CosmosDbName, this.CosmosDbContainerName);
         }
@@ -52,6 +49,7 @@ namespace PetSolution1.DAL
                 existingItem.PhoneNumber = employee.PhoneNumber;
                 existingItem.DOB = employee.DOB;
                 existingItem.Age = employee.Age;
+                existingItem.Gender= employee.Gender;
                 existingItem.Email = employee.Email;
                 var updateRes = await containerClient.ReplaceItemAsync(existingItem, id, new PartitionKey(employee.Id));
                 return new OkObjectResult(updateRes.Resource);

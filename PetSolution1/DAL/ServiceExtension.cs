@@ -12,10 +12,9 @@ namespace PetSolution1.DAL
 {
     public static class ServiceExtension
     {
-        public static void AddDomainCollection(this IServiceCollection services)
+        public static void AddDALCollection(this IServiceCollection services)
         {
             services.AddScoped<IEmployeeDAL, EmployeeDAL>();
         }
     }
 }
-
