@@ -20,33 +20,33 @@ namespace PetSolution1.HttpTrigger
             this.employeeDomain = empDomain;
         }
        
-        [FunctionName("CreateEmployee")]
+        [FunctionName(Constant.PostEmployee)]
         public async Task<IActionResult> CreateEmployee([HttpTrigger(AuthorizationLevel.Function, HttpMethodTypes.POST, Route = Routes.CreateEmployee)] HttpRequest req, ILogger log)
         {
             return await employeeDomain.CreateEmployeeAsync(req, log);
 
         }
 
-        [FunctionName("UpdateEmployee")]
+        [FunctionName(Constant.UpadteEmployee)]
         public async Task<IActionResult> UpdateEmployee([HttpTrigger(AuthorizationLevel.Function, HttpMethodTypes.PUT, Route = Routes.UpdateEmployee)] HttpRequest req, string id, string partitionkey, ILogger log)
         {
             return await employeeDomain.UpdateEmployeeAsync(req, id, log);
             //return await employeeDomain.UpdateEmployeeAsync(req,employee,id,log);
         }
 
-        [FunctionName("GetAllEmployees")]
+        [FunctionName(Constant.GetAllEmployee)]
         public async Task<IActionResult> GetAllEmployees([HttpTrigger(AuthorizationLevel.Function, HttpMethodTypes.GET, Route = Routes.GetAllEmployees)] HttpRequest req, ILogger log)
         {
               return await employeeDomain.GetAllEmployeesAsync(req,log);
         }
 
-        [FunctionName("GetEmplyeeById")]
+        [FunctionName(Constant.GetByIdEmployee)]
         public async Task<IActionResult> GetEmployeeById([HttpTrigger(AuthorizationLevel.Function, HttpMethodTypes.GET, Route = Routes.GetEmplyeeById)] HttpRequest req, string id, string partitionKey, ILogger log)
         {
              return await employeeDomain.GetEmployeeByIdAsync(req, id, partitionKey, log);
         }
 
-        [FunctionName("DeleteEmployeeById")]
+        [FunctionName(Constant.DeleteEmployee)]
         public async Task<IActionResult> DeleteEmployeeById([HttpTrigger(AuthorizationLevel.Function, HttpMethodTypes.DELETE, Route = Routes.DeleteEmployeeById)] HttpRequest req, string id, string partitionKey, ILogger log)
         {
             return await employeeDomain.DeleleEmployeeByIdAsync(req, id, partitionKey, log);
