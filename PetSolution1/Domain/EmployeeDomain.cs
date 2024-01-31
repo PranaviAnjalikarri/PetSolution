@@ -1,31 +1,34 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PetSolution1.CommonUtilities;
-using PetSolution1.DAL;
 using System;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CSharpVitamins;
 using PetSolution1.Domain.Interface;
-
+using System.Net.Http;
+using PetSolution1.DAL.Interface;
 
 namespace PetSolution1.Domain
 {
     public class EmployeeDomain : IEmployeeDomain
     {
         private readonly IConfiguration _configuration;
-        public EmployeeDomain(IConfiguration configuation)
+        private readonly ILogger _log;
+        private readonly IEmployeeDAL _employeeDAL;
+
+        public EmployeeDomain(IConfiguration configuration, ILogger<EmployeeDomain> log, IEmployeeDAL employeeDAL)
         {
-            _configuration = configuation;
+           _configuration = configuration;
+            _log = log;
+            _employeeDAL = employeeDAL;
         }
-        public async Task<IActionResult> CreateEmployeeAsync(HttpRequest req, ILogger log)
+        public async Task<IActionResult> CreateEmployeeAsync(HttpRequestMessage req, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = await req.Content.ReadAsStringAsync();
             var employeeId = ShortGuid.NewGuid();
             try
             {
@@ -48,36 +51,57 @@ namespace PetSolution1.Domain
                 {
                     return new BadRequestObjectResult("Please give a valid email address");
                 }
-                var employeeDAL = new EmployeeDAL(_configuration);
-                var response = await employeeDAL.CreateEmployeeAsync(newEmployee);
-                return new OkObjectResult("{\"result\":\"Employee Added\"}");    
+                await _employeeDAL.CreateEmployeeAsync(newEmployee);
+                return new OkObjectResult("{\"result\":\"Employees added:\"}");
             }
             catch (Exception e)
             {
+                _log.LogError($"Error in CreateEmployeeAsync: {e.Message}");
                 return new ContentResult() { Content = e.Message, StatusCode = 500 };
             }
         }
 
-        public async Task<IActionResult> GetAllEmployeesAsync(HttpRequest req, ILogger log)
+        public async Task<IActionResult> GetAllEmployeesAsync(HttpRequestMessage req, ILogger log)
         {
             log.LogInformation("c# http trigger function processed a request.");
-            EmployeeDAL employeeDAL = new EmployeeDAL(_configuration);
-            return  await employeeDAL.GetAllEmployeesAsync();
-     
+            try
+            {
+                await _employeeDAL.GetAllEmployeesAsync();
+                return new OkObjectResult("{\"result\":\"Employees details:\"}");
+            }
+            catch (Exception ex)
+            {
+                _log.LogError($"Error in GetAllEmployeesAsync: {ex.Message}");
+                return new BadRequestObjectResult("Error getting employees.");
+            }
+        }
+
+        public async Task<IActionResult> GetEmployeeByIdAsync(HttpRequestMessage req, string id, string partitionKey, ILogger log)
+        {
+            log.LogInformation("c# http trigger function processed a request.");
+            try
+            {
+                // Check if id is null
+                if (string.IsNullOrEmpty(id))
+                {
+                    return new BadRequestObjectResult("id required.");
+                }
+
+                await _employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
+                return new OkObjectResult("{\"result\":\"Employees details by id:\"}");
+            }
+            catch (Exception ex)
+            {
+                _log.LogError($"Error in GetAllEmployeeByIdAsync: {ex.Message}");
+                return new BadRequestObjectResult("Error getting employees.");
+            }
 
         }
 
-        public async Task<IActionResult> GetEmployeeByIdAsync(HttpRequest req, string id, string partitionKey, ILogger log)
-        {
-            log.LogInformation("c# http trigger function processed a request.");
-            EmployeeDAL employeeDAL = new EmployeeDAL(_configuration);
-            return  await employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
-        }
-
-        public async Task<IActionResult> UpdateEmployeeAsync(HttpRequest req, string id, ILogger log)
+        public async Task<IActionResult> UpdateEmployeeAsync(HttpRequestMessage req, string id, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = await req.Content.ReadAsStringAsync();
             try
             {
                 Employee newEmployee = JsonConvert.DeserializeObject<Employee>(requestBody);
@@ -99,29 +123,35 @@ namespace PetSolution1.Domain
                 {
                     return new BadRequestObjectResult("Please give a valid email address");
                 }
-                var employeeDAL = new EmployeeDAL(_configuration);
-                var response = await employeeDAL.UpdateEmployeeAsync(newEmployee,newEmployee.Id);
+                await _employeeDAL.UpdateEmployeeAsync(newEmployee,newEmployee.Id);
                 return new OkObjectResult("{\"result\":\"Employee Updated\"}");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return new ContentResult() { Content=e.Message, StatusCode=500};
+                _log.LogError($"Error in GetAllEmployeesAsync: {ex.Message}");
+                return new ContentResult() { Content=ex.Message, StatusCode=500};
             }
         }
 
-        public async Task<IActionResult> DeleleEmployeeByIdAsync(HttpRequest req, string id, string partitionKey, ILogger log)
+        public async Task<IActionResult> DeleleEmployeeByIdAsync(HttpRequestMessage req, string id, string partitionKey, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
             try
             {
-                var employeeDAL = new EmployeeDAL(_configuration);
-                await employeeDAL.DeleleEmployeeByIdAsync(id, partitionKey);
+                // Check if id is null
+                if (string.IsNullOrEmpty(id))
+                {
+                    return new BadRequestObjectResult("Id is required for delete operation.");
+                }
+
+                await _employeeDAL.DeleleEmployeeByIdAsync(id, partitionKey);
                 return new OkObjectResult("{\"result\":\"Employee Deleted\"}");
             }
 
             catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message);
+                _log.LogError($"Error in GetAllEmployeesAsync: {ex.Message}");
+                return new BadRequestObjectResult("Error while deleting employee.");
             }
         }
 

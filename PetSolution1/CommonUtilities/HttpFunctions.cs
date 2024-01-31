@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PetSolution1.CommonUtilities
+﻿namespace PetSolution1.CommonUtilities
 {  
         public class Constant
         {
