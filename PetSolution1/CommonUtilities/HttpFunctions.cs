@@ -6,7 +6,7 @@
             public const string UpadteEmployee = "UpdateEmployee";
             public const string PostEmployee = "CreateEmployee";
             public const string GetAllEmployee = "GetAllEmployees";
-            public const string GetByIdEmployee = "GetEmplyeeById";
+            public const string GetByIdEmployee = "GetEmployeeById";
         }
  }
 

@@ -6,10 +6,10 @@ namespace PetSolution1.DAL.Interface
 {
     public interface IEmployeeDAL
     {
-        public Task<IActionResult> CreateEmployeeAsync(Employee employee);
-        public Task<IActionResult> UpdateEmployeeAsync(Employee employee, string id);
-        public Task<IActionResult> DeleleEmployeeByIdAsync(string id, string partitionKey);
-        public Task<IActionResult> GetAllEmployeesAsync();
-        public Task<IActionResult> GetEmployeeByIdAsync(string id, string partitionKey);
+        Task<IActionResult> CreateEmployeeAsync(Employee employee);
+        Task<IActionResult> UpdateEmployeeAsync(Employee employee, string id);
+        Task<IActionResult> DeleleEmployeeByIdAsync(string id, string partitionKey);
+        Task<IActionResult> GetAllEmployeesAsync();
+        Task<IActionResult> GetEmployeeByIdAsync(string id, string partitionKey);
     }
 }

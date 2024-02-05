@@ -19,11 +19,11 @@ namespace PetSolution1.DAL
         private IConfiguration _configuration;
         public EmployeeDAL(IConfiguration configuation)
         {
-            _configuration= configuation;
+            _configuration = configuation;
             this.PrimaryConnectionString = _configuration.GetValue<string>("PrimaryConnectionString");
             this.CosmosDbName = _configuration.GetValue<string>("CosmosDbName");
             this.CosmosDbContainerName = _configuration.GetValue<string>("CosmosDbContainerName");
-            this.cosmosDbClient= new CosmosClient(this.PrimaryConnectionString);
+            this.cosmosDbClient = new CosmosClient(this.PrimaryConnectionString);
             this.containerClient = cosmosDbClient.GetContainer(this.CosmosDbName, this.CosmosDbContainerName);
         }
         public async Task<IActionResult> CreateEmployeeAsync(Employee employee)
@@ -60,21 +60,6 @@ namespace PetSolution1.DAL
                 return new BadRequestObjectResult(ex.Message);
             }
         }
-        public async Task<IActionResult> DeleleEmployeeByIdAsync(string id, string partitionKey)
-        {
-            try
-            {
-                await containerClient.DeleteItemAsync<Employee>(id, new PartitionKey(partitionKey));
-                var response = ("Employee deleted Successfully");
-                return new OkObjectResult(response);
-            }
-            catch (Exception ex)
-            {
-                return new BadRequestObjectResult(ex.Message);
-            }
-
-
-        }
         public async Task<IActionResult> GetAllEmployeesAsync()
         {
             try
@@ -90,7 +75,6 @@ namespace PetSolution1.DAL
                         employees.Add(employee);
                     }
                 }
-
                 return new OkObjectResult(employees);
             }
             catch (Exception ex)
@@ -102,7 +86,7 @@ namespace PetSolution1.DAL
         {
             try
             {
-                ItemResponse<Employee> response = await containerClient.ReadItemAsync<Employee>(id, new PartitionKey(partitionKey));
+               ItemResponse<Employee> response = await containerClient.ReadItemAsync<Employee>(id, new PartitionKey(partitionKey));
                 return new OkObjectResult(response.Resource);
             }
             catch (Exception ex)
@@ -110,5 +94,19 @@ namespace PetSolution1.DAL
                 return new BadRequestObjectResult(ex.Message);
             }
         }
+        public async Task<IActionResult> DeleleEmployeeByIdAsync(string id, string partitionKey)
+        {
+            try
+            {
+                await containerClient.DeleteItemAsync<Employee>(id, new PartitionKey(partitionKey));
+                var response = ("Employee deleted Successfully");
+                return new OkObjectResult(response);
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
     }
 }

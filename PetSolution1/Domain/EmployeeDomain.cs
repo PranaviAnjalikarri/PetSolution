@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CSharpVitamins;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using PetSolution1.CommonUtilities;
+using PetSolution1.DAL.Interface;
+using PetSolution1.Domain.Interface;
 using System;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CSharpVitamins;
-using PetSolution1.Domain.Interface;
-using System.Net.Http;
-using PetSolution1.DAL.Interface;
 
 namespace PetSolution1.Domain
 {
@@ -21,26 +20,25 @@ namespace PetSolution1.Domain
 
         public EmployeeDomain(IConfiguration configuration, ILogger<EmployeeDomain> log, IEmployeeDAL employeeDAL)
         {
-           _configuration = configuration;
+            _configuration = configuration;
             _log = log;
             _employeeDAL = employeeDAL;
         }
-        public async Task<IActionResult> CreateEmployeeAsync(HttpRequestMessage req, ILogger log)
+
+        public async Task<IActionResult> CreateEmployeeAsync(HttpRequestMessage req,Employee newEmployee, ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
-            string requestBody = await req.Content.ReadAsStringAsync();
-            var employeeId = ShortGuid.NewGuid();
             try
             {
-                Employee newEmployee = JsonConvert.DeserializeObject<Employee>(requestBody);
                 newEmployee.Id = ShortGuid.NewGuid();
+                log.LogInformation($"Employee details: {newEmployee.Id}, {newEmployee.Name},{newEmployee.Age},{newEmployee.DOB},{newEmployee.Gender},{newEmployee.Email}, {newEmployee.PhoneNumber}");
                 //Returns badrequest if the name is not valid.
                 if (!(!string.IsNullOrWhiteSpace(newEmployee.Name) && IsValidName(newEmployee.Name)))
                 {
                     return new BadRequestObjectResult("Please give a valid name");
                 }
                 //Finds the age based on dateofbirth
-               newEmployee.Age = DateTime.Now.AddYears(-newEmployee.DOB.Year).Year;
+                newEmployee.Age = DateTime.Now.AddYears(-newEmployee.DOB.Year).Year;
                 //Returns badrequest if the phone number is not valid.
                 if (!(!string.IsNullOrWhiteSpace(newEmployee.PhoneNumber) && IsValidPhoneNumber(newEmployee.PhoneNumber)))
                 {
@@ -52,7 +50,7 @@ namespace PetSolution1.Domain
                     return new BadRequestObjectResult("Please give a valid email address");
                 }
                 await _employeeDAL.CreateEmployeeAsync(newEmployee);
-                return new OkObjectResult("{\"result\":\"Employees added:\"}");
+                return new OkObjectResult($"Employee created successfully");
             }
             catch (Exception e)
             {
@@ -60,14 +58,47 @@ namespace PetSolution1.Domain
                 return new ContentResult() { Content = e.Message, StatusCode = 500 };
             }
         }
-
+        public async Task<IActionResult> UpdateEmployeeAsync(HttpRequestMessage req, Employee updatedEmployee, string id, ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
+            string requestBody = await req.Content.ReadAsStringAsync();
+            try
+            {
+                log.LogInformation($"Updated Employee details: {updatedEmployee.Id},{updatedEmployee.Name},{updatedEmployee.Age},{updatedEmployee.DOB},{updatedEmployee.Gender},{updatedEmployee.Email},{updatedEmployee.PhoneNumber}");
+                if (!(!string.IsNullOrWhiteSpace(updatedEmployee.Name) && IsValidName(updatedEmployee.Name)))
+                {
+                    return new BadRequestObjectResult("Please give a valid name");
+                }
+                //Finds the age based on dateofbirth
+                updatedEmployee.Age = DateTime.Now.AddYears(-updatedEmployee.DOB.Year).Year;
+                //Returns badrequest if the phone number is not valid.
+                if (!(!string.IsNullOrWhiteSpace(updatedEmployee.PhoneNumber) && IsValidPhoneNumber(updatedEmployee.PhoneNumber)))
+                {
+                    return new BadRequestObjectResult("Please give a valid phone number");
+                }
+                //Returns badrequest if the email is not valid.
+                if (!(!string.IsNullOrWhiteSpace(updatedEmployee.Email) && IsValidEmail(updatedEmployee.Email)))
+                {
+                    return new BadRequestObjectResult("Please give a valid email address");
+                }
+                
+                await _employeeDAL.UpdateEmployeeAsync(updatedEmployee, id);
+                // Return an appropriate response
+                return new OkObjectResult($"Employee updated successfully");
+            }
+            catch (Exception ex)
+            {
+                _log.LogError($"Error in UpdateEmployeeAsync: {ex.Message}");
+                return new ContentResult() { Content = ex.Message, StatusCode = 500 };
+            }
+        }
         public async Task<IActionResult> GetAllEmployeesAsync(HttpRequestMessage req, ILogger log)
         {
             log.LogInformation("c# http trigger function processed a request.");
             try
             {
-                await _employeeDAL.GetAllEmployeesAsync();
-                return new OkObjectResult("{\"result\":\"Employees details:\"}");
+                var employees = await _employeeDAL.GetAllEmployeesAsync();
+                return new OkObjectResult(employees);
             }
             catch (Exception ex)
             {
@@ -87,49 +118,13 @@ namespace PetSolution1.Domain
                     return new BadRequestObjectResult("id required.");
                 }
 
-                await _employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
-                return new OkObjectResult("{\"result\":\"Employees details by id:\"}");
+                var employees = await _employeeDAL.GetEmployeeByIdAsync(id, partitionKey);
+                return new OkObjectResult(employees);
             }
             catch (Exception ex)
             {
-                _log.LogError($"Error in GetAllEmployeeByIdAsync: {ex.Message}");
-                return new BadRequestObjectResult("Error getting employees.");
-            }
-
-        }
-
-        public async Task<IActionResult> UpdateEmployeeAsync(HttpRequestMessage req, string id, ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-            string requestBody = await req.Content.ReadAsStringAsync();
-            try
-            {
-                Employee newEmployee = JsonConvert.DeserializeObject<Employee>(requestBody);
-                //Call IsValidName Method
-                if (!(!string.IsNullOrWhiteSpace(newEmployee.Name) && IsValidName(newEmployee.Name)))
-                {
-                    return new BadRequestObjectResult("Please give a valid name");
-                }
-
-                //Finds the age based on dateofbirth
-                newEmployee.Age = DateTime.Now.AddYears(-newEmployee.DOB.Year).Year;
-                //Returns badrequest if the phone number is not valid.
-                if (!(!string.IsNullOrWhiteSpace(newEmployee.PhoneNumber) && IsValidPhoneNumber(newEmployee.PhoneNumber)))
-                {
-                    return new BadRequestObjectResult("Please give a valid phone number");
-                }
-                //Returns badrequest if the email is not valid.
-                if (!(!string.IsNullOrWhiteSpace(newEmployee.Email) && IsValidEmail(newEmployee.Email)))
-                {
-                    return new BadRequestObjectResult("Please give a valid email address");
-                }
-                await _employeeDAL.UpdateEmployeeAsync(newEmployee,newEmployee.Id);
-                return new OkObjectResult("{\"result\":\"Employee Updated\"}");
-            }
-            catch (Exception ex)
-            {
-                _log.LogError($"Error in GetAllEmployeesAsync: {ex.Message}");
-                return new ContentResult() { Content=ex.Message, StatusCode=500};
+                _log.LogError($"Error in GetEmployeeByIdAsync: {ex.Message}");
+                return new BadRequestObjectResult("Error getting employee by id.");
             }
         }
 
@@ -145,7 +140,7 @@ namespace PetSolution1.Domain
                 }
 
                 await _employeeDAL.DeleleEmployeeByIdAsync(id, partitionKey);
-                return new OkObjectResult("{\"result\":\"Employee Deleted\"}");
+                return new OkObjectResult("Employee deleted successfully");
             }
 
             catch (Exception ex)
@@ -154,7 +149,6 @@ namespace PetSolution1.Domain
                 return new BadRequestObjectResult("Error while deleting employee.");
             }
         }
-
         //Return true if valid else false
         private static bool IsValidEmail(string email)
         {
@@ -207,5 +201,5 @@ namespace PetSolution1.Domain
             return false;
         }
     }
-    
+
 }

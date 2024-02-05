@@ -4,11 +4,6 @@ using Microsoft.Extensions.Hosting;
 using PetSolution1;
 using PetSolution1.Domain;
 using PetSolution1.DAL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 [assembly: WebJobsStartup(typeof(Startup))]
 namespace PetSolution1
