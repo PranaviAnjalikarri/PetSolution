@@ -30,7 +30,8 @@ namespace PetSolution1.DAL
         {
             try
             {
-                var response = await containerClient.CreateItemAsync(employee, new PartitionKey(employee.Id));
+                await containerClient.CreateItemAsync(employee, new PartitionKey(employee.Id));
+                var response = ("Employee Created Successfully");
                 return new OkObjectResult(response);
             }
             catch (Exception ex)
@@ -49,7 +50,7 @@ namespace PetSolution1.DAL
                 existingItem.PhoneNumber = employee.PhoneNumber;
                 existingItem.DOB = employee.DOB;
                 existingItem.Age = employee.Age;
-                existingItem.Gender= employee.Gender;
+                existingItem.Gender = employee.Gender;
                 existingItem.Email = employee.Email;
                 var updateRes = await containerClient.ReplaceItemAsync(existingItem, id, new PartitionKey(employee.Id));
                 return new OkObjectResult(updateRes.Resource);
@@ -59,14 +60,13 @@ namespace PetSolution1.DAL
                 return new BadRequestObjectResult(ex.Message);
             }
         }
-
-
         public async Task<IActionResult> DeleleEmployeeByIdAsync(string id, string partitionKey)
         {
             try
             {
-                var response = await containerClient.DeleteItemAsync<Employee>(id, new PartitionKey(partitionKey));
-                return new OkObjectResult(response.StatusCode);
+                await containerClient.DeleteItemAsync<Employee>(id, new PartitionKey(partitionKey));
+                var response = ("Employee deleted Successfully");
+                return new OkObjectResult(response);
             }
             catch (Exception ex)
             {
@@ -75,23 +75,22 @@ namespace PetSolution1.DAL
 
 
         }
-
         public async Task<IActionResult> GetAllEmployeesAsync()
         {
             try
             {
-                var sqlQuery = "SELECT * FROM c";
-                QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                FeedIterator<Employee> queryResultSetIterator = containerClient.GetItemQueryIterator<Employee>(queryDefinition);
+                var iterator = containerClient.GetItemQueryIterator<Employee>();
                 List<Employee> employees = new List<Employee>();
-                while (queryResultSetIterator.HasMoreResults)
+
+                while (iterator.HasMoreResults)
                 {
-                    FeedResponse<Employee> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                    FeedResponse<Employee> currentResultSet = await iterator.ReadNextAsync();
                     foreach (Employee employee in currentResultSet)
                     {
                         employees.Add(employee);
                     }
                 }
+
                 return new OkObjectResult(employees);
             }
             catch (Exception ex)
@@ -99,7 +98,6 @@ namespace PetSolution1.DAL
                 return new BadRequestObjectResult(ex.Message);
             }
         }
-
         public async Task<IActionResult> GetEmployeeByIdAsync(string id, string partitionKey)
         {
             try

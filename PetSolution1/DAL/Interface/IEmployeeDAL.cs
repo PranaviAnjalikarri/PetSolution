@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PetSolution1.CommonUtilities;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Hosting;
 
 namespace PetSolution1.DAL.Interface
 {

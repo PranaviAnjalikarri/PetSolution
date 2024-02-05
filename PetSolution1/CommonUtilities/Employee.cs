@@ -2,7 +2,6 @@
 using System;
 using System.Globalization;
 
-
 namespace PetSolution1.CommonUtilities
 {
     public class Employee
